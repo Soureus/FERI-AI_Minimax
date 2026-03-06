@@ -1,4 +1,3 @@
-import math
 import streamlit as st
 from AIPlayer import AIPlayer
 from utils import winner_from_board, check_tie, available_moves
@@ -27,6 +26,11 @@ def reset_game():
             st.session_state.depth = 5
         case 5:
             st.session_state.depth = 9
+            
+def reset_session():
+    reset_game()
+    st.session_state.ai_win_num = 0
+    st.session_state.human_win_num = 0
     
 def sync_symbols():
     st.session_state.ai = "o" if st.session_state.human == "x" else "x"
@@ -51,6 +55,10 @@ def ensure_state():
         st.session_state.status = ""
     if "difficulty" not in st.session_state:
         st.session_state.difficulty = 5
+    if "ai_win_num" not in st.session_state:
+        st.session_state.ai_win_num = 0
+    if "human_win_num" not in st.session_state:
+        st.session_state.human_win_num = 0
         
     if "prev_human" not in st.session_state:
         st.session_state.prev_human = st.session_state.human
@@ -66,6 +74,10 @@ def end_checks():
     if w is not None:
         st.session_state.game_over = True
         st.session_state.winner = w
+        if w == st.session_state.ai:
+            st.session_state.ai_win_num += 1
+        else:
+            st.session_state.human_win_num += 1
     if check_tie(st.session_state.board):
         st.session_state.game_over = True
         st.session_state.winner = None
@@ -121,6 +133,8 @@ with st.sidebar:
         
     if st.button("New Game"):
         reset_game()
+    if st.button("New Session"):
+        reset_session()
         
     settings_changed = (
         st.session_state.human != st.session_state.prev_human
@@ -180,7 +194,7 @@ with st.container():
             disabled = st.session_state.game_over or (st.session_state.active != st.session_state.human) or (cell != ".") 
             if cols[c].button(label, key = f"cell_{r}_{c}", use_container_width = True, disabled=disabled):
                 human_move(r,c)
-st.write("")
+st.write(f"AI wins: {st.session_state.ai_win_num}  \nHuman Wins: {st.session_state.human_win_num}")
     
 
     
