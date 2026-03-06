@@ -31,6 +31,7 @@ def reset_session():
     reset_game()
     st.session_state.ai_win_num = 0
     st.session_state.human_win_num = 0
+    st.session_state.tie_num = 0
     
 def sync_symbols():
     st.session_state.ai = "o" if st.session_state.human == "x" else "x"
@@ -59,13 +60,17 @@ def ensure_state():
         st.session_state.ai_win_num = 0
     if "human_win_num" not in st.session_state:
         st.session_state.human_win_num = 0
+    if "tie_num" not in st.session_state:
+        st.session_state.tie_num = 0
+    if "ai_playstyle" not in st.session_state:
+        st.session_state.ai_playstyle = "basic"
         
     if "prev_human" not in st.session_state:
         st.session_state.prev_human = st.session_state.human
     if "prev_start_player" not in st.session_state:
         st.session_state.prev_start_player = st.session_state.start_player
-    if "prev_depth" not in st.session_state:
-        st.session_state.prev_depth = st.session_state.depth
+    if "prev_difficulty" not in st.session_state:
+        st.session_state.prev_difficulty = st.session_state.difficulty
         
 
 #-- Game --
@@ -81,6 +86,7 @@ def end_checks():
     if check_tie(st.session_state.board):
         st.session_state.game_over = True
         st.session_state.winner = None
+        st.session_state.tie_num += 1
 
 def ai_turn():
     if st.session_state.game_over:
@@ -88,7 +94,8 @@ def ai_turn():
     if st.session_state.active != st.session_state.ai:
         return
     
-    ai = AIPlayer(st.session_state.ai, st.session_state.human)
+    ai = AIPlayer(st.session_state.ai, st.session_state.human, playstyle=st.session_state.ai_playstyle)
+        
     moves = available_moves(st.session_state.board)
     if not moves:
         end_checks()
@@ -121,7 +128,7 @@ def human_move(r,c):
 ensure_state()
 
 st.title("Tic-Tac-Toe Minimax")
-st.caption("Click a square to start playing")
+st.caption("#####  Click a square to start playing")
 
 with st.sidebar:
     st.header("Settings")
@@ -129,7 +136,9 @@ with st.sidebar:
     st.radio("Your symbol", ["x", "o"], key="human")
     sync_symbols()
     st.radio("Starting player", ["x", "o"], key="start_player")
-    st.slider("AI Difficulty", 1, 5, key="difficulty")
+    #st.slider("AI Difficulty", 1, 5, key="difficulty")
+    st.selectbox("AI Difficulty", options=list(range(1,6)), index=0, key="difficulty")
+    st.radio("AI Playstyle", ["agressive", "basic"], key ="ai_playstyle")
         
     if st.button("New Game"):
         reset_game()
@@ -139,14 +148,14 @@ with st.sidebar:
     settings_changed = (
         st.session_state.human != st.session_state.prev_human
         or st.session_state.start_player != st.session_state.prev_start_player
-        or st.session_state.depth != st.session_state.prev_depth
+        or st.session_state.difficulty != st.session_state.prev_difficulty
         )
 
     if settings_changed:
         reset_game()
         st.session_state.prev_human = st.session_state.human
         st.session_state.prev_start_player = st.session_state.start_player
-        st.session_state.prev_depth = st.session_state.depth
+        st.session_state.prev_difficulty = st.session_state.difficulty
         
 if st.session_state.active == st.session_state.ai and not st.session_state.game_over:
     ai_turn()
@@ -194,7 +203,7 @@ with st.container():
             disabled = st.session_state.game_over or (st.session_state.active != st.session_state.human) or (cell != ".") 
             if cols[c].button(label, key = f"cell_{r}_{c}", use_container_width = True, disabled=disabled):
                 human_move(r,c)
-st.write(f"AI wins: {st.session_state.ai_win_num}  \nHuman Wins: {st.session_state.human_win_num}")
+st.write("### " + f"AI wins: {st.session_state.ai_win_num}" + f"\n###  Human Wins: {st.session_state.human_win_num}  \n###  Draws: {st.session_state.tie_num}")
     
 
     
