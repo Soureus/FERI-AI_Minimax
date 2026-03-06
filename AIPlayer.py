@@ -11,9 +11,9 @@ class AIPlayer:
     def minimax(self, is_maximizing: bool, board: list[list[str]], depth: int, alpha: int, beta: int) -> int:
         winner = winner_from_board(board, self.ai_player, self.human_player)
         if winner == self.ai_player:
-            return 10
+            return 10 + depth
         if winner == self.human_player:
-            return -10
+            return -10 - depth
         if check_tie(board):
             return 0
         if depth == 0:
